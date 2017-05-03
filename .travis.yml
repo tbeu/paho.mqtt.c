@@ -1,54 +1,52 @@
 language: c
-jobs:
-  include:
-    - os: linux
-      compiler: gcc
-      dist: bionic
-      env: OPENSSL_ROOT_DIR= PAHO_BUILD_STATIC=TRUE PAHO_BUILD_SHARED=FALSE
-    - os: linux
-      compiler: gcc
-      dist: xenial
-      env: OPENSSL_ROOT_DIR= PAHO_BUILD_STATIC=TRUE PAHO_BUILD_SHARED=TRUE
-    - os: osx
-      compiler: clang
-      env: OPENSSL_ROOT_DIR=/usr/local/opt/openssl PAHO_BUILD_STATIC=FALSE PAHO_BUILD_SHARED=TRUE
-    - os: linux
-      compiler: gcc
-      dist: trusty
-      env: OPENSSL_ROOT_DIR= PAHO_BUILD_STATIC=FALSE PAHO_BUILD_SHARED=TRUE
-before_install:
-#- if [ "$DEPLOY" = "true" ]; then ./travis-setup-deploy.sh; fi
-- "./travis-install.sh"
+
+git:
+  depth: 5
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-4.8-multilib
+      - linux-libc-dev
+      - linux-libc-dev:i386
+
 env:
   global:
-  - secure: Ro53zVdGCjCQx9U4wvD9GBwB346tIQ7y1MWOAe1QrFWlmoQLC8KUeddQkc+27pdrOG9Fm9QQcI82EDlh0bfRBy1ITfWSVVZVfbNLv9sBWesND1F9YlnFpn/fag2OE+ULPSEJVJMxZoqiR9yiYWO3pTWue4YjCSuFAjpQNO6VnV3HiQJRG1jeaylx0QVLQWKAL/qkRbuqG9o4xpS1Kebaj86+q9UTHcL1a+Aj53u+Ajqnc9ZbUB/yBrfHyufTKpAD8Ef/FEIWXg2svtiWVEwEsPtdTn5P7AefJ2FNEyT4uMKIEBzWIPeWvUZLFF6U7QA07+uYDE0Ir4voPptBUlIYqQz1CUz9XCOPmM/N+GgqpyNyUjpMb4CM1b+iwBwcsHc0Z1JFcPz65ZMSt1D/WeUfQlaB/KxQBpz4lD2mxEmAuBIoGNrAG+FRULoY+xQSAf7V0W8am6QbHNnXif30mdkF3lgAhaAOwWO03JD7ctEJXqzRbMK8HrBkrgWfHsRRLFT50m8CrNLFz+3lCYuPHge2gHUMDfIHMxd4N9f2dlfV9GJkHQOQYwFfP5L2Y5Xq9KTnZX+bsglDC2WcOJu2F8h1LxTMV5Kku8zl1RZlEAt8Qa9EtCMczA3sL4NfGxazO22WpyOvHdwb26mhdJTgquI5oZsl71zcIf+WLGfgUAEq4/k=
+    - DEPLOY_LIBS="libpaho-mqtt3c.a libpaho-mqtt3a.a"
+    # BBPASS
+    - secure: "DsLs+zTRwCD0K/PhfjZt/F5Ugp9oX9WUcgcNwaeklTYtsxp1/6ibqxi9PYG++MVA71hCKDU+qN4Rc4lt7UebNVHwrhTtMNejd+M9B5rKNdfReWl5rkuUuZvAtcDQLkBkChwYL4r9Jh+JX/1ChUyXPDf1tFD94XQNFn/snVue4eO3LCo7fEWIQENuD3Ox7zb7O4JcynttrqiRl2wfJOrq6t0mO17tAWIZ6yLWH8z5oX/O7Fr3rfLdvJx1znPWErluAiEqZimsWl1EmXK6LCbB5EWxayZI6doZi4EADXXSmnLVVTgAS5MkH+jgT1xwWmIyOsc4IWxLEalqZ2qoilMDpPr+cG7OEWAIdhgb+j03AX+bNTQU3wnVZ4Kwjq/oYmxumBVnuegiNnml7HT+fs7Tqi72r0dTh5OVECs8hJCShp5Ux9tIVChG3YBWxg5Nix9PVW6euByhagtRFRPo9uHl0WRvAhIlGoafBlhhx1FowSEC+wQQMJRz7A3odmwRrB3FmffGnqq2NyGVi7Q9bg5vLRDv1vQ2h7PTOc08XrOa3MIv3YpBZn0Jm5b934KUWG3q1t56zuily7ZL8/YyMVYGD15L5Rr9iFHn6EZKkHkqOrGg9FNioHX1RDIZu40Pl8tKzzKVJtk1nq3GPtRiuvxlJQVW8SsqiFLv495tAWqBhi8="
+
+branches:
+  only:
+    - makefile-static-library
+  
+matrix:
+  include:
+    - os: linux
+      compiler: gcc-4.8
+      env:
+        - PLATFORM=32
+    - os: linux
+      compiler: gcc-4.8
+      env:
+        - PLATFORM=64
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
+  - curl https://bitbucket.org/Swyter/bitbucket-curl-upload-to-repo-downloads/raw/default/upload-to-bitbucket.sh -O -J && chmod +x ./upload-to-bitbucket.sh
+
+before_script:
+  - mkdir Library
+  - cd Library
+  - mkdir linux32
+  - mkdir linux64
+  - cd $TRAVIS_BUILD_DIR
+
 script:
-- if [[ "$COVERITY_SCAN_BRANCH" != 1 ]]; then ./travis-build.sh; fi
-addons:
-  coverity_scan:
-    project:
-      name: eclipse/paho.mqtt.c
-    notification_email: icraggs@gmail.com
-    build_command_prepend: make clean
-    build_command: make -j 4
-    branch_pattern: coverity-.*
-  apt:
-    packages:
-    - cmake
-    - cmake-data
-    - doxygen
-  ssh_known_hosts: build.eclipse.org
-after_success:
-- ls -l build.paho/*.tar.gz
-#- if [ "$DEPLOY" = "true" ]; then ./travis-deploy.sh; fi
-deploy:
-  provider: releases
-  api_key:
-    secure: L5fp5Q+ZQvLt7jsQ6RUWbK6sm29ZNmfLmEXKZCg4g6+kaqxXmt3ijJT6VgNoZh209bP8TyfxDbbmdvfN542O4rM69WcyrBEIfsvkjs2thnyYpMz7PtDXUfiLdv/Wws4f8QCFOwy4xKmk4VFcrxPRoQRBGcQ23P3l1bcW56m4qB3JzupqHsj7/caMQmyk3gGKx/uSj9Vtvjl7z0pM1NuH2sxkdeUZ1FLDdb6HmY/Wo3v0ldO8gBUfrcjoi9zgjdV5AztxTafVhNu0LIbbAie1y6tMVGUqnXm2W4PqgfhtYAhM8VOfEykzh5sH0+DqA4G82X512aHHegdkK3/wt+DXZX6n/XK4tWBQR87vN8n8Lexj+uKC1Mmh7VTrO6f5QS/eXR1RvG5w+XBKIfHuOC6t6PS3NrRrGxUzY3DzgyBpUSaw+bNbL+auvN0bPz6lBjykiawdCZhjlqytNBOTsgNOyJaWJGE4fMTXQjVDcdZ8Cr/BOXHImXsm5cQ2clBwMg8RGwxBeX4nOcGaCfeYogI84z4uIRwTc5REnW4MCHeZgnZNvf3dG/hUCQpUPB2CIooqj84o36chjTp3at6mZxzKc1aATexmhu9UWRzqT3Ezs8KuaU4LxdlPI0UYO5bWf+BexRCmUwSkHlcqUwoZeRE/Fd4KXkm2r6anisyEJmywfD8=
-  file_glob: true
-  file: build.paho/*.tar.gz
-  on:
-    repo: eclipse/paho.mqtt.c
-    tags: true
-  skip_cleanup: true
-  draft: false
+  - if [[ "$PLATFORM" == "32" ]]; then make CFLAGS="-O3 -msse2 -m32 -fPIC" TARGETDIR="linux32"; fi
+  - if [[ "$PLATFORM" == "64" ]]; then make CFLAGS="-O3 -fPIC"; fi
+  - cd Library/linux$PLATFORM
+  - tar cJf paho.mqtt.c_linux$PLATFORM.tar.xz $DEPLOY_LIBS
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CC" == "gcc-4.8" ]]; then sh ../../upload-to-bitbucket.sh tbeu $BBPASS /tbeu/downloads/downloads paho.mqtt.c_linux$PLATFORM.tar.xz; fi
