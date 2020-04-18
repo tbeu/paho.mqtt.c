@@ -2,7 +2,7 @@ AR = ar -ru
 RM = rm -f
 
 CFLAGS = -O3
-CPPFLAGS = -DNDEBUG
+CPPFLAGS = -DNDEBUG -DOPENSSL=1
 INC =
 
 TARGETDIR = linux64
@@ -13,65 +13,79 @@ MQTTLIB_CS = paho-mqtt3cs
 MQTTLIB_A = paho-mqtt3a
 MQTTLIB_AS = paho-mqtt3as
 
-MQTT3A_OBJS = \
-	MQTTProtocolClient.o \
+MQTT3AS_OBJS = \
+	Base64.o \
 	Clients.o \
-	utf-8.o \
-	StackTrace.o \
-	MQTTPacket.o \
-	MQTTPacketOut.o \
-	Messages.o \
-	Tree.o \
-	Socket.o \
-	Log.o \
-	MQTTPersistence.o \
-	Thread.o \
-	MQTTProtocolOut.o \
-	MQTTPersistenceDefault.o \
-	SocketBuffer.o \
 	Heap.o \
 	LinkedList.o \
+	Log.o \
+	Messages.o \
+	MQTTPacket.o \
+	MQTTPacketOut.o \
+	MQTTPersistence.o \
+	MQTTPersistenceDefault.o \
+	MQTTProperties.o \
+	MQTTProtocolClient.o \
+	MQTTProtocolOut.o \
+	MQTTReasonCodes.o \
+	MQTTTime.o \
+	SHA1.o \
+	Socket.o \
+	SocketBuffer.o \
+	SSLSocket.o \
+	StackTrace.o \
+	Thread.o \
+	Tree.o \
+	utf-8.o \
+	WebSocket.o \
 	MQTTAsync.o
 
-MQTT3C_OBJS = \
-	MQTTProtocolClient.o \
+MQTT3CS_OBJS = \
+	Base64.o \
 	Clients.o \
-	utf-8.o \
-	StackTrace.o \
-	MQTTPacket.o \
-	MQTTPacketOut.o \
-	Messages.o \
-	Tree.o \
-	Socket.o \
-	Log.o \
-	MQTTPersistence.o \
-	Thread.o \
-	MQTTProtocolOut.o \
-	MQTTPersistenceDefault.o \
-	SocketBuffer.o \
 	Heap.o \
 	LinkedList.o \
+	Log.o \
+	Messages.o \
+	MQTTPacket.o \
+	MQTTPacketOut.o \
+	MQTTPersistence.o \
+	MQTTPersistenceDefault.o \
+	MQTTProperties.o \
+	MQTTProtocolClient.o \
+	MQTTProtocolOut.o \
+	MQTTReasonCodes.o \
+	MQTTTime.o \
+	SHA1.o \
+	Socket.o \
+	SocketBuffer.o \
+	SSLSocket.o \
+	StackTrace.o \
+	Thread.o \
+	Tree.o \
+	utf-8.o \
+	WebSocket.o \
 	MQTTClient.o
 
-ALL_OBJS = $(MQTT3A_OBJS) $(MQTT3C_OBJS)
+ALL_OBJS = $(MQTT3AS_OBJS) $(MQTT3CS_OBJS)
 
 TS := $(shell /bin/date -u)
 
-all: clean versioninfo lib$(MQTTLIB_A).a lib$(MQTTLIB_C).a
+all: clean versioninfo lib$(MQTTLIB_AS).a lib$(MQTTLIB_CS).a
 
 versioninfo:
 	@echo "#ifndef VERSIONINFO_H" > src/VersionInfo.h
 	@echo "#define VERSIONINFO_H" >> src/VersionInfo.h
 	@echo "#define BUILD_TIMESTAMP \""$(TS)"\"" >> src/VersionInfo.h
-	@echo "#define CLIENT_VERSION \"1.2.1\""  >> src/VersionInfo.h
+	@echo "#define CLIENT_VERSION \"1.3.2\""  >> src/VersionInfo.h
 	@echo "#endif /* VERSIONINFO_H */" >> src/VersionInfo.h
 
-lib$(MQTTLIB_A).a: $(MQTT3A_OBJS)
-	$(AR) $@ $(MQTT3A_OBJS)
+lib$(MQTTLIB_AS).a: $(MQTT3AS_OBJS)
+	$(AR) $@ $(MQTT3AS_OBJS)
 	cp $@ Library/$(TARGETDIR)/$@
 
-lib$(MQTTLIB_C).a: $(MQTT3C_OBJS)
-	$(AR) $@ $(MQTT3C_OBJS)
+lib$(MQTTLIB_CS).a: $(MQTT3CS_OBJS)
+	$(AR) $@ $(MQTT3CS_OBJS)
 	cp $@ Library/$(TARGETDIR)/$@
 
 %.o: src/%.c

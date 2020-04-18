@@ -14,7 +14,7 @@ addons:
 
 env:
   global:
-    - DEPLOY_LIBS="libpaho-mqtt3c.a libpaho-mqtt3a.a"
+    - DEPLOY_LIBS="libpaho-mqtt3cs.a libpaho-mqtt3as.a ../../openssl/libssl.a ../../openssl/libcrypto.a"
     # BBPASS
     - secure: "DsLs+zTRwCD0K/PhfjZt/F5Ugp9oX9WUcgcNwaeklTYtsxp1/6ibqxi9PYG++MVA71hCKDU+qN4Rc4lt7UebNVHwrhTtMNejd+M9B5rKNdfReWl5rkuUuZvAtcDQLkBkChwYL4r9Jh+JX/1ChUyXPDf1tFD94XQNFn/snVue4eO3LCo7fEWIQENuD3Ox7zb7O4JcynttrqiRl2wfJOrq6t0mO17tAWIZ6yLWH8z5oX/O7Fr3rfLdvJx1znPWErluAiEqZimsWl1EmXK6LCbB5EWxayZI6doZi4EADXXSmnLVVTgAS5MkH+jgT1xwWmIyOsc4IWxLEalqZ2qoilMDpPr+cG7OEWAIdhgb+j03AX+bNTQU3wnVZ4Kwjq/oYmxumBVnuegiNnml7HT+fs7Tqi72r0dTh5OVECs8hJCShp5Ux9tIVChG3YBWxg5Nix9PVW6euByhagtRFRPo9uHl0WRvAhIlGoafBlhhx1FowSEC+wQQMJRz7A3odmwRrB3FmffGnqq2NyGVi7Q9bg5vLRDv1vQ2h7PTOc08XrOa3MIv3YpBZn0Jm5b934KUWG3q1t56zuily7ZL8/YyMVYGD15L5Rr9iFHn6EZKkHkqOrGg9FNioHX1RDIZu40Pl8tKzzKVJtk1nq3GPtRiuvxlJQVW8SsqiFLv495tAWqBhi8="
 
@@ -37,6 +37,14 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
   - curl https://bitbucket.org/Swyter/bitbucket-curl-upload-to-repo-downloads/raw/default/upload-to-bitbucket.sh -O -J && chmod +x ./upload-to-bitbucket.sh
 
+install:
+  - git clone --depth 1 --branch OpenSSL_1_0_2u https://github.com/openssl/openssl
+  - cd openssl
+  - if [[ "$PLATFORM" == "32" ]]; then ./Configure no-zlib no-asm no-shared no-dso -msse2 -m32 linux-generic32 -fPIC; fi
+  - if [[ "$PLATFORM" == "64" ]]; then ./config no-zlib no-asm no-shared no-dso -fPIC; fi
+  - make
+  - cd $TRAVIS_BUILD_DIR
+
 before_script:
   - mkdir Library
   - cd Library
@@ -45,8 +53,8 @@ before_script:
   - cd $TRAVIS_BUILD_DIR
 
 script:
-  - if [[ "$PLATFORM" == "32" ]]; then make CFLAGS="-O3 -msse2 -m32 -fPIC" TARGETDIR="linux32"; fi
-  - if [[ "$PLATFORM" == "64" ]]; then make CFLAGS="-O3 -fPIC"; fi
+  - if [[ "$PLATFORM" == "32" ]]; then make CFLAGS="-O3 -msse2 -m32 -fPIC" TARGETDIR="linux32" INC=-I"openssl/include"; fi
+  - if [[ "$PLATFORM" == "64" ]]; then make CFLAGS="-O3 -fPIC" INC=-I"openssl/include"; fi
   - cd Library/linux$PLATFORM
   - tar cJf paho.mqtt.c_linux$PLATFORM.tar.xz $DEPLOY_LIBS
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CC" == "gcc-4.8" ]]; then sh ../../upload-to-bitbucket.sh tbeu $BBPASS /tbeu/downloads/downloads paho.mqtt.c_linux$PLATFORM.tar.xz; fi
