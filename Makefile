@@ -77,7 +77,7 @@ versioninfo:
 	@echo "#ifndef VERSIONINFO_H" > src/VersionInfo.h
 	@echo "#define VERSIONINFO_H" >> src/VersionInfo.h
 	@echo "#define BUILD_TIMESTAMP \""$(TS)"\"" >> src/VersionInfo.h
-	@echo "#define CLIENT_VERSION \"1.3.2\""  >> src/VersionInfo.h
+	@echo "#define CLIENT_VERSION \"1.3.8\""  >> src/VersionInfo.h
 	@echo "#endif /* VERSIONINFO_H */" >> src/VersionInfo.h
 
 lib$(MQTTLIB_AS).a: $(MQTT3AS_OBJS)
